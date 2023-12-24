@@ -42,7 +42,7 @@ class Product(BaseModel):
     subcategory = models.ForeignKey(SubCategory, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     description = models.TextField(validators=[MaxLengthValidator(1000)])
-    price = models.DecimalField(max_digits=9, decimal_places=2)
+    price = models.DecimalField(max_digits=11, decimal_places=2)
     photo_id = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:

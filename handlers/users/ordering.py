@@ -33,6 +33,7 @@ async def send_products(call: types.CallbackQuery, category_id, subcategory_id, 
 
 # product - (1, '2023-12-14 12:53:34.054650', '2023-12-14 12:54:10.269572', 'Qizil olma', 'Judayam foydali', 12000, 1, None)
 async def send_product(call: types.CallbackQuery, category_id, subcategory_id, product_id):
+    user_id = db.select_user(call.from_user.id)[0]
     product = db.select_product(product_id)
     subcategory_name = db.select_subcategory(product[6])
     info = f"Mahsulot turi: {subcategory_name}\n\n" \
@@ -42,13 +43,21 @@ async def send_product(call: types.CallbackQuery, category_id, subcategory_id, p
     await call.message.delete()
     try:
         await call.message.answer_photo(photo=product[-1], caption=info,
-                                        reply_markup=await product_markup(category_id, subcategory_id, product_id))
+                                        reply_markup=await product_markup(category_id, subcategory_id, product_id, user_id))
     except BadRequest:
-        await call.message.answer(info, reply_markup=await product_markup(category_id, subcategory_id, product_id))
+        await call.message.answer(info, reply_markup=await product_markup(category_id, subcategory_id, product_id, user_id))
 
 
-async def order_product(call: types.Message, *args, **kwargs):
-    pass
+async def order_product(call: types.CallbackQuery, category_id, subcategory_id, product_id, *args, **kwargs):
+    user_id = db.select_user(call.from_user.id)[0]
+    db.add_product(product_id, user_id)
+    await call.message.edit_reply_markup(await product_markup(category_id, subcategory_id, product_id, user_id))
+
+
+async def remove_order_product(call: types.CallbackQuery, category_id, subcategory_id, product_id, *args, **kwargs):
+    user_id = db.select_user(call.from_user.id)[0]
+    db.remove_product(product_id, user_id)
+    await call.message.edit_reply_markup(await product_markup(category_id, subcategory_id, product_id, user_id))
 
 
 @dp.callback_query_handler(call_back_data.filter())
@@ -67,6 +76,8 @@ async def select_func(call: types.CallbackQuery, callback_data: dict):
         func_name = send_product
     elif level == '4':
         func_name = order_product
+    elif level == '5':
+        func_name = remove_order_product
     else:
         func_name = close_menu
     await func_name(call, category_id, subcategory_id, product_id)
