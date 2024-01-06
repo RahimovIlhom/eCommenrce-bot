@@ -44,7 +44,7 @@ async def products_markup(category_id, subcategory_id, product_id):
     products = db.select_products(subcategory_id)
     for product in products:
         markup.insert(InlineKeyboardButton(
-            text=f"{product[3]} - {product[5]}so'm",
+            text=f"{product[3]} - {product[7]}so'm",
             callback_data=await create_call_back(CURRENT_LEVEL+1, category_id, subcategory_id, product[0])
         ))
     markup.insert(InlineKeyboardButton(

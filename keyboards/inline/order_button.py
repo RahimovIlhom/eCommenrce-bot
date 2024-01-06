@@ -1,5 +1,5 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from .data_query import call_back_data_order, create_call_back_order
+from .data_query import call_back_data_order, create_call_back_order, create_payment_data
 
 
 # product_id, user_id, product_name, count
@@ -35,12 +35,14 @@ async def create_order_button(products: list[dict]):
     return markup
 
 
-payment_method_button = InlineKeyboardMarkup(row_width=2)
-payment_method_button.insert(InlineKeyboardButton(
-    text='Click',
-    callback_data='click'
-))
-payment_method_button.insert(InlineKeyboardButton(
-    text='Payme',
-    callback_data='payme'
-))
+async def payment_method_buttons(order_id):
+    markup = InlineKeyboardMarkup(row_width=2)
+    markup.insert(InlineKeyboardButton(
+        text='Click',
+        callback_data=await create_payment_data('click', order_id)
+    ))
+    markup.insert(InlineKeyboardButton(
+        text='Payme',
+        callback_data=await create_payment_data('payme', order_id)
+    ))
+    return markup

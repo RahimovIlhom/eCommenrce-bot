@@ -35,14 +35,15 @@ async def send_products(call: types.CallbackQuery, category_id, subcategory_id, 
 async def send_product(call: types.CallbackQuery, category_id, subcategory_id, product_id):
     user_id = db.select_user(call.from_user.id)[0]
     product = db.select_product(product_id)
+    # product - id, cre, upd, name, desc, photo, sub, price
     subcategory_name = db.select_subcategory(product[6])
     info = f"Mahsulot turi: {subcategory_name}\n\n" \
            f"Mahsulot: {product[3]}\n\n" \
            f"{product[4]}\n\n" \
-           f"Narxi: {product[5]}"
+           f"Narxi: {product[7]}"
     await call.message.delete()
     try:
-        await call.message.answer_photo(photo=product[-1], caption=info,
+        await call.message.answer_photo(photo=product[5], caption=info,
                                         reply_markup=await product_markup(category_id, subcategory_id, product_id, user_id))
     except BadRequest:
         await call.message.answer(info, reply_markup=await product_markup(category_id, subcategory_id, product_id, user_id))

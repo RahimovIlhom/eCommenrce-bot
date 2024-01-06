@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class Database:
@@ -39,6 +39,24 @@ class Database:
             cur.execute(SQL, (datetime.now(), datetime.now(), user_id, False))
             conn.commit()
 
+    def close_order(self, user_id, delta_day=None):
+        conn = self.connect
+        cur = conn.cursor()
+        order = cur.execute(f'select * from "order" where user_id={user_id} and payment={False}').fetchone()
+        if order:
+            SQL = "update 'order' set payment=?, exp_time=? where user_id=?"
+            if delta_day:
+                cur.execute(SQL, (True, datetime.now() + timedelta(days=delta_day), user_id))
+            else:
+                cur.execute(SQL, (True, datetime.now(), user_id))
+            conn.commit()
+            self.create_order(user_id)
+            return cur.execute(f'select * from "order" where user_id={user_id} and payment={True}').fetchone()[3]
+        else:
+            SQL = 'insert into "order" (created_time, update_time, user_id, payment) values (?, ?, ?, ?);'
+            cur.execute(SQL, (datetime.now(), datetime.now(), user_id, False))
+            conn.commit()
+
     def select_order(self, user_id):
         conn = self.connect
         cur = conn.cursor()
@@ -48,7 +66,13 @@ class Database:
     def select_order_product(self, user_id, product_id):
         conn = self.connect
         cur = conn.cursor()
-        resp = cur.execute("select * from 'order_product' where user_id=? and product_id=?", (user_id, product_id))
+        resp = cur.execute("select * from 'order_product' where user_id=? and product_id=? and paid=?", (user_id, product_id, False))
+        return resp.fetchone()
+
+    def select_order_product_id(self, order_product_id):
+        conn = self.connect
+        cur = conn.cursor()
+        resp = cur.execute("select * from 'order_product' where id=? and paid=?", (order_product_id, False))
         return resp.fetchone()
 
     def select_order_products(self, order_id):
@@ -61,8 +85,14 @@ class Database:
     def select_order_product_all(self, user_id):
         conn = self.connect
         cur = conn.cursor()
-        resp = cur.execute("select * from 'order_product' where user_id=?", (user_id, ))
+        resp = cur.execute("select * from 'order_product' where user_id=? and paid=?", (user_id, False))
         return resp.fetchall()
+
+    def paid_order_product_all(self, user_id):
+        conn = self.connect
+        cur = conn.cursor()
+        resp = cur.execute("update 'order_product' set paid=? where user_id=?", (True, user_id))
+        conn.commit()
 
     def order_product_add_order(self, order_product_id, order_id):
         conn = self.connect
@@ -79,8 +109,8 @@ class Database:
             SQL_add_order_product = "update 'order_product' set count=? where user_id=? and product_id=?;"
             cur.execute(SQL_add_order_product, (int(order_product[3])+1, user_id, product_id))
         else:
-            SQL_create_order_product = "insert into 'order_product' (created_time, update_time, count, product_id, user_id) values (?, ?, ?, ?, ?);"
-            cur.execute(SQL_create_order_product, (datetime.now(), datetime.now(), 1, product_id, user_id))
+            SQL_create_order_product = "insert into 'order_product' (created_time, update_time, count, product_id, user_id, paid) values (?, ?, ?, ?, ?, ?);"
+            cur.execute(SQL_create_order_product, (datetime.now(), datetime.now(), 1, product_id, user_id, False))
             order_product_id = self.select_order_product(user_id, product_id)[0]
             order_id = self.select_order(user_id)[0]
             self.order_product_add_order(order_product_id, order_id)

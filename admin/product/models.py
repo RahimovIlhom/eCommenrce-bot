@@ -56,6 +56,7 @@ class OrderProduct(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     count = models.IntegerField()
+    paid = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'order_product'
