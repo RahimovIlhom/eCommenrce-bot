@@ -125,12 +125,17 @@ async def send_invoice(call: types.CallbackQuery, callback_data: dict):
     title = "Mahsulot sotib olish"
     payload = order[0]
     prices = [LabeledPrice(label="Umumiy summa", amount=summa*100)]
-    photo = "https://www.google.com/url?sa=i&url=https%3A%2F%2Fclick.uz%2F&psig=AOvVaw3_x6wFsaEbh5nBcAwHovV3&ust=1703505335145000&source=images&cd=vfe&opi=89978449&ved=0CA8QjRxqFwoTCOjNz4yCqIMDFQAAAAAdAAAAABAD"
+    if method == 'payme':
+        provider_token = PROVIDER_TOKEN_PAYME
+        photo = "https://play.google.com/store/apps/details?id=uz.dida.payme&hl=gsw"
+    else:
+        provider_token = PROVIDER_TOKEN_CLICK
+        photo = "https://play.google.com/store/apps/details?id=air.com.ssdsoftwaresolutions.clickuz&hl=en_US"
     product = Product(title=title, description=description, payload=payload,
                       currency="UZS", prices=prices, start_parameter='123456',
                       photo_url=photo, photo_width=850, photo_height=425,
                       need_name=True, need_phone_number=True,
-                      need_shipping_address=True, is_flexible=True)
+                      need_shipping_address=True, is_flexible=True, provider_token=provider_token)
     await bot.send_invoice(tg_id,
                            **product.generate_dict, )
 
